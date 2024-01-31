@@ -1,7 +1,7 @@
 import itertools
 
 import nlp2
-import pkg_resources
+from pathlib import Path
 
 
 class IPA2:
@@ -15,7 +15,7 @@ class IPA2:
                 self.data.update(self.load_lang_to_list(i))
 
     def load_lang_to_list(self, lang):
-        file_loc = pkg_resources.resource_filename(__name__, 'data/' + lang + '.tsv')
+        file_loc = (Path(__file__).parent / 'data' / (lang + '.tsv')).resolve()
         if nlp2.is_file_exist(file_loc):
             tdict = nlp2.read_csv(file_loc, delimiter='\t')
             t = {}
@@ -23,33 +23,39 @@ class IPA2:
                 t[i[0]] = i[1]
             return t
         else:
-            assert FileNotFoundError
+            assert FileNotFoundError(f"{lang} not supported as `data/{lang}.tsv` is not provided...")
 
-    def convert_sent(self, input='測試的句子'):
-        not_converted_char = []
-        input = nlp2.split_sentence_to_array(input, False)
+    def convert_sent(self, _input='測試的句子'):
+        _input = nlp2.split_sentence_to_array(_input.lower(), False)
         result = []
         # maximum match
-        senlen = len(input)
+        senlen = len(_input)
         start = 0
         while start < senlen:
             matched = False
             for i in range(senlen, 0, -1):
-                string = "".join(input[start:start + i])
+                string = "".join(_input[start:start + i])
                 if string in self.data:
                     result.append(string)
                     matched = True
                     break
             if not matched:
                 i = 1
-                result.append(input[start])
+                result.append(_input[start])
             start += i
 
         # get all combination
         ipa_result = []
+        not_converted_char = None
         for i in result:
             if i in self.data:
+                if not_converted_char is not None:
+                    ipa_result.append([not_converted_char])
                 ipa_result.append(self.data[i].split(","))
+                not_converted_char = None
             else:
-                not_converted_char.append(i)
-        return [" ".join(x) for x in itertools.product(*ipa_result)], not_converted_char
+                if not_converted_char is None:
+                    not_converted_char = ''
+                not_converted_char += i
+
+        return [" ".join(x) for x in itertools.product(*ipa_result)]

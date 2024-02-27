@@ -23,7 +23,9 @@ setup(
     keywords='nlp file io string text mining ipa voice',
     zip_safe=True,
     install_requires=[
-        "nlp2"
+        "nlp2",
+        "zhon",
+        "hanzidentifier",
     ],
     packages=find_packages()
 )

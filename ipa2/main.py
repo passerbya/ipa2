@@ -2,12 +2,14 @@ import itertools
 
 import nlp2
 from pathlib import Path
+from . import dragonmapper
 
 
 class IPA2:
     def __init__(self, lang='yue'):
         super().__init__()
         self.data = {}
+        self.lang = lang
         if isinstance(lang, str):
             self.data = self.load_lang_to_list(lang)
         elif isinstance(lang, list):
@@ -50,12 +52,20 @@ class IPA2:
         for i in result:
             if i in self.data:
                 if not_converted_char is not None:
-                    ipa_result.append([not_converted_char])
+                    if (isinstance(self.lang, str) and self.lang.startswith('zho-')) or (isinstance(self.lang, list) and True in [s.startswith('zho-') for s in self.lang]):
+                        ipa_result.append([dragonmapper.hanzi.to_ipa(not_converted_char)])
+                    else:
+                        ipa_result.append([not_converted_char])
                 ipa_result.append(self.data[i].split(","))
                 not_converted_char = None
             else:
                 if not_converted_char is None:
                     not_converted_char = ''
                 not_converted_char += i
+        if not_converted_char is not None:
+            if (isinstance(self.lang, str) and self.lang.startswith('zho-')) or (isinstance(self.lang, list) and True in [s.startswith('zho-') for s in self.lang]):
+                ipa_result.append([dragonmapper.hanzi.to_ipa(not_converted_char)])
+            else:
+                ipa_result.append([not_converted_char])
 
         return [" ".join(x) for x in itertools.product(*ipa_result)]

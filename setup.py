@@ -4,7 +4,7 @@ setup(
     name='ipa2',
     version='0.9.0',
     package_dir={'ipa2': 'ipa2'},
-    package_data={'ipa2': ['data/*']},
+    package_data={'ipa2': ['data/*', 'dragonmapper/data/*']},
     description='Tools for convert Text to IPA in python',
     long_description="Github : https://github.com/voidful/ipa2",
     url='https://github.com/voidful/ipa2',
@@ -26,6 +26,8 @@ setup(
         "nlp2",
         "zhon",
         "hanzidentifier",
+        "eng-to-ipa",
+        "epitran",
     ],
     packages=find_packages()
 )

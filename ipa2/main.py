@@ -1,3 +1,5 @@
+import os
+import re
 import itertools
 
 import nlp2
@@ -6,7 +8,10 @@ from pathlib import Path
 from . import dragonmapper
 #from .tamil2ipa import txt2ipa
 from .kannada2ipa import kannada2ipa
+from .worker import to_jamo
+from .kana2ipa import kana2ipa
 import epitran
+import pykakasi
 
 
 class IPA2:
@@ -15,8 +20,25 @@ class IPA2:
         self.data = {}
         self.lang = lang
         self.epi = None
+        self.lao_epi = None
+        self.ur2sr = None
         if isinstance(lang, str):
-            if lang == 'kan':
+            if lang == 'kor':
+                os.environ["TF_ENABLE_ONEDNN_OPTS"] = '0'
+                from fairseq.models.transformer import TransformerModel
+                resources = Path(__file__).parent / 'resources'
+                data_bin = str(resources / 'bin')
+                model = str(resources / 'model_transformer')
+                self.ur2sr = TransformerModel.from_pretrained(
+                    model,
+                    checkpoint_file='checkpoint200.pt',
+                    data_name_or_path=data_bin,
+                    bpe='sentencepiece',
+                    sentencepiece_model=str(resources / 'spm.model'),
+                    source_lang='ur',
+                    target_lang='sr'
+                )
+            elif lang == 'kan':
                 pass
             else:
                 if lang == 'lao':
@@ -75,10 +97,27 @@ class IPA2:
                     self.epi = epitran.Epitran('nld-Latn')
                 elif lang == 'ukr':
                     self.epi = epitran.Epitran('ukr-Cyrl')
+                if self.lang == 'jpn':
+                    self.kks = pykakasi.kakasi()
                 self.data = self.load_lang_to_list(lang)
         elif isinstance(lang, list):
             for i in lang:
-                if i == 'kan':
+                if i == 'kor':
+                    os.environ["TF_ENABLE_ONEDNN_OPTS"] = '0'
+                    from fairseq.models.transformer import TransformerModel
+                    resources = Path(__file__).parent / 'resources'
+                    data_bin = str(resources / 'bin')
+                    model = str(resources / 'model_transformer')
+                    self.ur2sr = TransformerModel.from_pretrained(
+                        model,
+                        checkpoint_file='checkpoint200.pt',
+                        data_name_or_path=data_bin,
+                        bpe='sentencepiece',
+                        sentencepiece_model=str(resources / 'spm.model'),
+                        source_lang='ur',
+                        target_lang='sr'
+                    )
+                elif i == 'kan':
                     pass
                 else:
                     if i == 'lao':
@@ -137,18 +176,87 @@ class IPA2:
                         self.epi = epitran.Epitran('nld-Latn')
                     elif i == 'ukr':
                         self.epi = epitran.Epitran('ukr-Cyrl')
+                    if i == 'jpn':
+                        self.kks = pykakasi.kakasi()
                     self.data.update(self.load_lang_to_list(i))
 
     def load_lang_to_list(self, lang):
         file_loc = (Path(__file__).parent / 'data' / (lang + '.tsv')).resolve()
+        t = {}
         if nlp2.is_file_exist(file_loc):
             tdict = nlp2.read_csv(file_loc, delimiter='\t')
-            t = {}
             for i in tdict:
                 t[i[0]] = i[1]
-            return t
         else:
+            file_loc = None
+
+        if lang == 'ar':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'ar.txt').resolve()
+        elif lang == 'ger':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'de.txt').resolve()
+        elif lang == 'eng-us':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'en_US.txt').resolve()
+        elif lang == 'eng-uk':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'en_UK.txt').resolve()
+        elif lang == 'spa':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'es_ES.txt').resolve()
+        elif lang == 'spa-me':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'es_MX.txt').resolve()
+        elif lang == 'fas':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'fa.txt').resolve()
+        elif lang == 'fin':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'fi.txt').resolve()
+        elif lang == 'fra':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'fr_FR.txt').resolve()
+        elif lang == 'fra-qu':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'fr_QC.txt').resolve()
+        elif lang == 'isl':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'is.txt').resolve()
+        elif lang == 'jpn':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'ja.txt').resolve()
+        elif lang == 'khm':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'km.txt').resolve()
+        elif lang == 'kor':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'ko.txt').resolve()
+        elif lang == 'msa':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'ma.txt').resolve()
+        elif lang == 'nob':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'nb.txt').resolve()
+        elif lang == 'dut':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'nl.txt').resolve()
+        elif lang == 'ori':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'or.txt').resolve()
+        elif lang == 'por-bz':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'pt_BR.txt').resolve()
+        elif lang == 'ron':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'ro.txt').resolve()
+        elif lang == 'swe':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'sv.txt').resolve()
+        elif lang == 'swa':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'sw.txt').resolve()
+        elif lang == 'tha':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'tts.txt').resolve()
+        elif lang == 'vie-c':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'vi_C.txt').resolve()
+        elif lang == 'vie-n':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'vi_N.txt').resolve()
+        elif lang == 'vie-s':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'vi_S.txt').resolve()
+        elif lang == 'yue':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'yue.txt').resolve()
+        elif lang == 'zho-s':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'zh_hans.txt').resolve()
+        elif lang == 'zho-t':
+            file_loc = (Path(__file__).parent / 'ipa-dict' / 'zh_hant.txt').resolve()
+
+        if file_loc is None:
             raise FileNotFoundError(f"{lang} not supported as `data/{lang}.tsv` is not provided...")
+
+        if str(file_loc).endswith('.txt'):
+            tdict = nlp2.read_csv(file_loc, delimiter='\t')
+            for i in tdict:
+                t[i[0]] = re.sub(',\s*', ',', i[1].replace('/', ''))
+        return t
 
     def hanzi_to_ipa(self, text, retrieve_all=False):
         if retrieve_all:
@@ -160,21 +268,39 @@ class IPA2:
             return eval(s)
         return [dragonmapper.hanzi.to_ipa(text, all_readings=False)]
 
+    def hanzi_to_kana(self, text):
+        result = self.kks.convert(text)
+        if result is not None and len(result) >0:
+            spell = ''
+            sep = ''
+            for item in result:
+                hira = kana2ipa(item['hira'])
+                spell += sep + hira
+                sep  = ' '
+        else:
+            spell = text
+        return spell
+
     def retrieve_not_converted_char(self, not_converted_char, retrieve_all=False):
         if (isinstance(self.lang, str) and self.lang.startswith('zho-')) or (isinstance(self.lang, list) and True in [s.startswith('zho-') for s in self.lang]):
             return self.hanzi_to_ipa(not_converted_char, retrieve_all)
         elif (isinstance(self.lang, str) and self.lang.startswith('eng-')) or (isinstance(self.lang, list) and True in [s.startswith('eng-') for s in self.lang]):
             return [ipa.convert(not_converted_char)]
+        elif (isinstance(self.lang, str) and self.lang == 'jpn') or (isinstance(self.lang, list) and True in [s == 'jpn' for s in self.lang]):
+            return [self.hanzi_to_kana(not_converted_char)]
         elif self.epi is not None:
             return [self.epi.transliterate(not_converted_char)]
         else:
             return [not_converted_char]
 
     def convert_sent(self, _input, retrieve_all=False):
+        if self.ur2sr is not None:
+            jamo = to_jamo(_input)
+            return [self.ur2sr.translate(jamo)]
+        elif self.lao_epi is not None:
+            return [self.lao_epi.transliterate(_input)]
         if (isinstance(self.lang, str) and self.lang == 'kan') or (isinstance(self.lang, list) and True in [s == 'kan' for s in self.lang]):
             return [kannada2ipa(_input)]
-        if (isinstance(self.lang, str) and self.lang == 'lao') or (isinstance(self.lang, list) and True in [s == 'lao' for s in self.lang]):
-            return [self.lao_epi.transliterate(_input)]
         if (isinstance(self.lang, str) and self.lang.startswith('eng-')) or (isinstance(self.lang, list) and True in [s.startswith('eng-') for s in self.lang]):
             return [ipa.convert(_input)]
 

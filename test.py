@@ -2,7 +2,9 @@ import re
 from ipa2 import IPA2, dragonmapper
 from ipa2.tamil2ipa import txt2ipa
 from ipa2.kannada2ipa import kannada2ipa
+from ipa2.kana2ipa import kana2ipa
 import epitran
+import pykakasi
 
 import itertools
 from pypinyin import pinyin, Style
@@ -53,7 +55,6 @@ print(ipa.convert_sent("一共 26859 人"))
 print(ipa.convert_sent("在 Python 3.4 及以上版本，你可以使用 pathlib 模块"))
 print(ipa.convert_sent("你可以使用pathlib模块"))
 
-print('-'*20)
 text = "你可以使用pathlib模块"
 
 text = "一一"
@@ -88,3 +89,30 @@ print(type(s))
 print(s)
 
 print(ipa.convert_sent("长长", retrieve_all=True))
+
+text='ぴゃ'
+kks = pykakasi.kakasi()
+result = kks.convert(text)
+if result is not None and len(result) >0:
+    spell = ''
+    sep = ''
+    for item in result:
+        spell += sep + kana2ipa(item['hepburn'])
+        sep  = ' '
+    print(spell)
+print(kana2ipa(text))
+
+
+text='좋거든요'
+ipa = IPA2(['kor'])
+print(ipa.convert_sent(text))
+
+text='国際音声記号 は、ラテンアルファベットに基づく音声システムであり、19世紀の終わりに国際音声記号協会によって音声発音の標準表記として設計されました。'
+ipa = IPA2(['jpn'])
+print(ipa.convert_sent(text))
+
+import jaconv
+text = 'ティロ・フィナーレａｂｃ１２３'
+print(jaconv.z2h(text, kana=False, ascii=True, digit=True))
+#text='て'
+print(jaconv.alphabet2kana(jaconv.normalize(text, mode='NFKC')))

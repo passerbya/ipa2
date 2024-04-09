@@ -5,12 +5,11 @@ from ipa2.kannada2ipa import kannada2ipa
 from ipa2.kana2ipa import kana2ipa
 import epitran
 import pykakasi
-from persian_phonemizer import Phonemizer
+from ipa2.vphon import vPhon
 
-phonemizer = Phonemizer()
-print(phonemizer.phonemize("آن مرد مرد."))
-ipa = IPA2('fas')
-print(ipa.convert_sent("آن مرد مرد."))
+print(vPhon.main(['--text', 'Chúng tôi','--dialect', 'n']))
+ipa = IPA2('vie-n')
+print(ipa.convert_sent('Chúng tôi'))
 
 
 ipa = IPA2('zho-s')

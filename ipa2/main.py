@@ -9,12 +9,13 @@ from pathlib import Path
 from .kannada2ipa import kannada2ipa
 from .worker import to_jamo
 from .kana2ipa import kana2ipa
+from .vphon import vPhon
 import epitran
 import pykakasi
 from pypinyin import pinyin, Style
 from pinyin_to_ipa import pinyin_to_ipa
 from pypinyin_dict.phrase_pinyin_data import large_pinyin
-from persian_phonemizer import Phonemizer
+#from persian_phonemizer import Phonemizer
 
 
 class IPA2:
@@ -316,6 +317,12 @@ class IPA2:
                 return [' '.join([self.pinyin2ipa(y) for y in x]) for x in itertools.product(*result)]
         if (isinstance(self.lang, str) and self.lang.startswith('eng-')) or (isinstance(self.lang, list) and True in [s.startswith('eng-') for s in self.lang]):
             return [ipa.convert(_input)]
+        if (isinstance(self.lang, str) and self.lang == 'vie-n') or (isinstance(self.lang, list) and True in [s == 'vie-n' for s in self.lang]):
+            return [vPhon.main(['--text', _input,'--dialect', 'n'])]
+        if (isinstance(self.lang, str) and self.lang == 'vie-c') or (isinstance(self.lang, list) and True in [s == 'vie-c' for s in self.lang]):
+            return [vPhon.main(['--text', _input,'--dialect', 'c'])]
+        if (isinstance(self.lang, str) and self.lang == 'vie-s') or (isinstance(self.lang, list) and True in [s == 'vie-s' for s in self.lang]):
+            return [vPhon.main(['--text', _input,'--dialect', 's'])]
 
         _input = nlp2.split_sentence_to_array(_input.lower(), False)
         result = []

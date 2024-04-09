@@ -7,6 +7,15 @@ import epitran
 import pykakasi
 from ipa2.vphon import vPhon
 
+from ipa2.g2pT import g2p
+from pythainlp.tokenize import word_tokenize
+text = "คนเล่นเกมที่กรุงเทพ"
+text = "ผมเรียนอยู่ที่มหาวิทยาลัยขอนแก่นวิทยาเขตหนองคาย"
+print(' '.join([g2p(i).replace(' ', '').replace('.', ' ') for i in word_tokenize(text)]))
+
+ipa = IPA2('tha')
+print(ipa.convert_sent(text))
+
 print(vPhon.main(['--text', 'Chúng tôi','--dialect', 'n']))
 ipa = IPA2('vie-n')
 print(ipa.convert_sent('Chúng tôi'))

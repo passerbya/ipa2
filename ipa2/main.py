@@ -15,8 +15,8 @@ import pykakasi
 from pypinyin import pinyin, Style
 from pinyin_to_ipa import pinyin_to_ipa
 from pypinyin_dict.phrase_pinyin_data import large_pinyin
-#from persian_phonemizer import Phonemizer
-
+from .g2pT import g2p
+from pythainlp.tokenize import word_tokenize
 
 class IPA2:
     def __init__(self, lang='yue'):
@@ -31,6 +31,7 @@ class IPA2:
             if lang.startswith('zho-'):
                 large_pinyin.load()
             elif lang == 'fas':
+                from persian_phonemizer import Phonemizer
                 self.phonemizer = Phonemizer()
             elif lang == 'kor':
                 os.environ["TF_ENABLE_ONEDNN_OPTS"] = '0'
@@ -114,6 +115,7 @@ class IPA2:
                 if i.startswith('zho-'):
                     large_pinyin.load()
                 elif i == 'fas':
+                    from persian_phonemizer import Phonemizer
                     self.phonemizer = Phonemizer()
                 elif i == 'kor':
                     os.environ["TF_ENABLE_ONEDNN_OPTS"] = '0'
@@ -323,6 +325,8 @@ class IPA2:
             return [vPhon.main(['--text', _input,'--dialect', 'c'])]
         if (isinstance(self.lang, str) and self.lang == 'vie-s') or (isinstance(self.lang, list) and True in [s == 'vie-s' for s in self.lang]):
             return [vPhon.main(['--text', _input,'--dialect', 's'])]
+        if (isinstance(self.lang, str) and self.lang == 'tha') or (isinstance(self.lang, list) and True in [s == 'tha' for s in self.lang]):
+            return [' '.join([g2p(i).replace(' ', '').replace('.', ' ') for i in word_tokenize(_input)])]
 
         _input = nlp2.split_sentence_to_array(_input.lower(), False)
         result = []

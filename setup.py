@@ -37,7 +37,8 @@ setup(
         "pinyin-to-ipa",
         "pypinyin",
         "pypinyin-dict",
-        "persian_phonemizer"
+        "persian_phonemizer",
+        "pythainlp"
     ],
     packages=find_packages('.')
 )

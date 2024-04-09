@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='ipa2',
-    version='0.9.1',
+    version='0.9.2',
     package_data={'ipa2': ['data/*', 'ipa-dict/*', 'resources/*', 'resources/*/*', 'dragonmapper/data/*']},
     description='Tools for convert Text to IPA in python',
     long_description="Github : https://github.com/voidful/ipa2",

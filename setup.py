@@ -33,7 +33,8 @@ setup(
         "fairseq",
         "pykakasi",
         "pinyin-to-ipa",
-        "pypinyin"
+        "pypinyin",
+        "pypinyin-dict"
     ],
     packages=find_packages('.')
 )

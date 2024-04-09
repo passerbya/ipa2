@@ -13,6 +13,7 @@ import epitran
 import pykakasi
 from pypinyin import pinyin, Style
 from pinyin_to_ipa import pinyin_to_ipa
+from pypinyin_dict.phrase_pinyin_data import large_pinyin
 
 
 class IPA2:
@@ -24,7 +25,9 @@ class IPA2:
         self.lao_epi = None
         self.ur2sr = None
         if isinstance(lang, str):
-            if lang == 'kor':
+            if lang.startswith('zho-'):
+                large_pinyin.load()
+            elif lang == 'kor':
                 os.environ["TF_ENABLE_ONEDNN_OPTS"] = '0'
                 from fairseq.models.transformer import TransformerModel
                 resources = Path(__file__).parent / 'resources'
@@ -103,7 +106,9 @@ class IPA2:
                 self.data = self.load_lang_to_list(lang)
         elif isinstance(lang, list):
             for i in lang:
-                if i == 'kor':
+                if i.startswith('zho-'):
+                    large_pinyin.load()
+                elif i == 'kor':
                     os.environ["TF_ENABLE_ONEDNN_OPTS"] = '0'
                     from fairseq.models.transformer import TransformerModel
                     resources = Path(__file__).parent / 'resources'
@@ -282,6 +287,13 @@ class IPA2:
         else:
             return [not_converted_char]
 
+    def pinyin2ipa(self, txt):
+        try:
+            res_ipa = pinyin_to_ipa(txt)
+            return ''.join(res_ipa[0])
+        except:
+            return txt
+
     def convert_sent(self, _input, retrieve_all=False):
         if self.ur2sr is not None:
             jamo = to_jamo(_input)
@@ -291,18 +303,9 @@ class IPA2:
         if (isinstance(self.lang, str) and self.lang == 'kan') or (isinstance(self.lang, list) and True in [s == 'kan' for s in self.lang]):
             return [kannada2ipa(_input)]
         if (isinstance(self.lang, str) and self.lang.startswith('zho-')) or (isinstance(self.lang, list) and True in [s.startswith('zho-') for s in self.lang]):
-            result = pinyin(_input, style=Style.TONE3)
+            result = pinyin(_input, style=Style.TONE3, heteronym=retrieve_all)
             if result is not None and len(result) > 0:
-                ch_ipa = ''
-                sep = ''
-                for res in result:
-                    res_ipa = pinyin_to_ipa(res[0])
-                    if len(res_ipa) > 0:
-                        ch_ipa += sep + ''.join(res_ipa[0])
-                    else:
-                        ch_ipa += sep + res[0]
-                    sep = ' '
-                return ch_ipa
+                return [' '.join([self.pinyin2ipa(y) for y in x]) for x in itertools.product(*result)]
         if (isinstance(self.lang, str) and self.lang.startswith('eng-')) or (isinstance(self.lang, list) and True in [s.startswith('eng-') for s in self.lang]):
             return [ipa.convert(_input)]
 

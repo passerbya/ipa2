@@ -5,13 +5,14 @@ import itertools
 import nlp2
 import eng_to_ipa as ipa
 from pathlib import Path
-from . import dragonmapper
 #from .tamil2ipa import txt2ipa
 from .kannada2ipa import kannada2ipa
 from .worker import to_jamo
 from .kana2ipa import kana2ipa
 import epitran
 import pykakasi
+from pypinyin import pinyin, Style
+from pinyin_to_ipa import pinyin_to_ipa
 
 
 class IPA2:
@@ -258,16 +259,6 @@ class IPA2:
                 t[i[0]] = re.sub(',\s*', ',', i[1].replace('/', ''))
         return t
 
-    def hanzi_to_ipa(self, text, retrieve_all=False):
-        if retrieve_all:
-            s = dragonmapper.hanzi.to_ipa(text, all_readings=True)
-            s = s.replace('/', ' ')
-            s = s.replace('[', '["')
-            s = s.replace(']', '"]')
-            s = s.replace('][', ',')
-            return eval(s)
-        return [dragonmapper.hanzi.to_ipa(text, all_readings=False)]
-
     def hanzi_to_kana(self, text):
         result = self.kks.convert(text)
         if result is not None and len(result) >0:
@@ -282,9 +273,7 @@ class IPA2:
         return spell
 
     def retrieve_not_converted_char(self, not_converted_char, retrieve_all=False):
-        if (isinstance(self.lang, str) and self.lang.startswith('zho-')) or (isinstance(self.lang, list) and True in [s.startswith('zho-') for s in self.lang]):
-            return self.hanzi_to_ipa(not_converted_char, retrieve_all)
-        elif (isinstance(self.lang, str) and self.lang.startswith('eng-')) or (isinstance(self.lang, list) and True in [s.startswith('eng-') for s in self.lang]):
+        if (isinstance(self.lang, str) and self.lang.startswith('eng-')) or (isinstance(self.lang, list) and True in [s.startswith('eng-') for s in self.lang]):
             return [ipa.convert(not_converted_char)]
         elif (isinstance(self.lang, str) and self.lang == 'jpn') or (isinstance(self.lang, list) and True in [s == 'jpn' for s in self.lang]):
             return [self.hanzi_to_kana(not_converted_char)]
@@ -301,6 +290,19 @@ class IPA2:
             return [self.lao_epi.transliterate(_input)]
         if (isinstance(self.lang, str) and self.lang == 'kan') or (isinstance(self.lang, list) and True in [s == 'kan' for s in self.lang]):
             return [kannada2ipa(_input)]
+        if (isinstance(self.lang, str) and self.lang.startswith('zho-')) or (isinstance(self.lang, list) and True in [s.startswith('zho-') for s in self.lang]):
+            result = pinyin(_input, style=Style.TONE3)
+            if result is not None and len(result) > 0:
+                ch_ipa = ''
+                sep = ''
+                for res in result:
+                    res_ipa = pinyin_to_ipa(res[0])
+                    if len(res_ipa) > 0:
+                        ch_ipa += sep + ''.join(res_ipa[0])
+                    else:
+                        ch_ipa += sep + res[0]
+                    sep = ' '
+                return ch_ipa
         if (isinstance(self.lang, str) and self.lang.startswith('eng-')) or (isinstance(self.lang, list) and True in [s.startswith('eng-') for s in self.lang]):
             return [ipa.convert(_input)]
 

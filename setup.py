@@ -32,6 +32,8 @@ setup(
         "epitran",
         "fairseq",
         "pykakasi",
+        "pinyin-to-ipa",
+        "pypinyin"
     ],
     packages=find_packages('.')
 )

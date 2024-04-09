@@ -14,6 +14,7 @@ import pykakasi
 from pypinyin import pinyin, Style
 from pinyin_to_ipa import pinyin_to_ipa
 from pypinyin_dict.phrase_pinyin_data import large_pinyin
+from persian_phonemizer import Phonemizer
 
 
 class IPA2:
@@ -24,9 +25,12 @@ class IPA2:
         self.epi = None
         self.lao_epi = None
         self.ur2sr = None
+        self.phonemizer = None
         if isinstance(lang, str):
             if lang.startswith('zho-'):
                 large_pinyin.load()
+            elif lang == 'fas':
+                self.phonemizer = Phonemizer()
             elif lang == 'kor':
                 os.environ["TF_ENABLE_ONEDNN_OPTS"] = '0'
                 from fairseq.models.transformer import TransformerModel
@@ -108,6 +112,8 @@ class IPA2:
             for i in lang:
                 if i.startswith('zho-'):
                     large_pinyin.load()
+                elif i == 'fas':
+                    self.phonemizer = Phonemizer()
                 elif i == 'kor':
                     os.environ["TF_ENABLE_ONEDNN_OPTS"] = '0'
                     from fairseq.models.transformer import TransformerModel
@@ -300,6 +306,8 @@ class IPA2:
             return [self.ur2sr.translate(jamo)]
         elif self.lao_epi is not None:
             return [self.lao_epi.transliterate(_input)]
+        elif self.phonemizer is not None:
+            return [self.phonemizer.phonemize(_input)]
         if (isinstance(self.lang, str) and self.lang == 'kan') or (isinstance(self.lang, list) and True in [s == 'kan' for s in self.lang]):
             return [kannada2ipa(_input)]
         if (isinstance(self.lang, str) and self.lang.startswith('zho-')) or (isinstance(self.lang, list) and True in [s.startswith('zho-') for s in self.lang]):

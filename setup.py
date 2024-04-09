@@ -30,11 +30,14 @@ setup(
         "hanzidentifier",
         "eng-to-ipa",
         "epitran",
+        "jamo",
+        "g2pk",
         "fairseq",
         "pykakasi",
         "pinyin-to-ipa",
         "pypinyin",
-        "pypinyin-dict"
+        "pypinyin-dict",
+        "persian_phonemizer"
     ],
     packages=find_packages('.')
 )

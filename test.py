@@ -5,6 +5,13 @@ from ipa2.kannada2ipa import kannada2ipa
 from ipa2.kana2ipa import kana2ipa
 import epitran
 import pykakasi
+from persian_phonemizer import Phonemizer
+
+phonemizer = Phonemizer()
+print(phonemizer.phonemize("آن مرد مرد."))
+ipa = IPA2('fas')
+print(ipa.convert_sent("آن مرد مرد."))
+
 
 ipa = IPA2('zho-s')
 print(ipa.convert_sent("长牛羊", retrieve_all=True))

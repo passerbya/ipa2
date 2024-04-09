@@ -17,6 +17,7 @@ from pinyin_to_ipa import pinyin_to_ipa
 from pypinyin_dict.phrase_pinyin_data import large_pinyin
 from .g2pT import g2p
 from pythainlp.tokenize import word_tokenize
+from khmerphonemizer import phonemize
 
 class IPA2:
     def __init__(self, lang='yue'):
@@ -327,6 +328,10 @@ class IPA2:
             return [vPhon.main(['--text', _input,'--dialect', 's'])]
         if (isinstance(self.lang, str) and self.lang == 'tha') or (isinstance(self.lang, list) and True in [s == 'tha' for s in self.lang]):
             return [' '.join([g2p(i).replace(' ', '').replace('.', ' ') for i in word_tokenize(_input)])]
+        if (isinstance(self.lang, str) and self.lang == 'khm') or (isinstance(self.lang, list) and True in [s == 'khm' for s in self.lang]):
+            result = phonemize(_input)
+            if result is not None and len(result) > 1:
+                return [' '.join([''.join(i) for i in result[1]])]
 
         _input = nlp2.split_sentence_to_array(_input.lower(), False)
         result = []

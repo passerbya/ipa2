@@ -7,6 +7,17 @@ import epitran
 import pykakasi
 from ipa2.vphon import vPhon
 
+from khmerphonemizer import phonemize
+
+text = "នៅលើលោកនេះមិនមានមនុស្សណាម្នាក់ចេះអស់ទេ"
+result = phonemize(text)
+print(result)
+
+print(' '.join([''.join(i) for i in result[1]]))
+
+ipa = IPA2('khm')
+print(ipa.convert_sent(text))
+
 from ipa2.g2pT import g2p
 from pythainlp.tokenize import word_tokenize
 text = "คนเล่นเกมที่กรุงเทพ"

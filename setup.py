@@ -38,7 +38,8 @@ setup(
         "pypinyin",
         "pypinyin-dict",
         "persian_phonemizer",
-        "pythainlp"
+        "pythainlp",
+        "khmerphonemizer"
     ],
     packages=find_packages('.')
 )

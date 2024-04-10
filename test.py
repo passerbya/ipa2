@@ -6,6 +6,16 @@ from ipa2.kana2ipa import kana2ipa
 import epitran
 import pykakasi
 from ipa2.vphon import vPhon
+from g2p_id import G2p
+
+text = 'Mereka sedang bermain bola di lapangan.'
+g2p = G2p()
+result = g2p(text)
+print(result)
+print(' '.join([''.join(i) for i in result]))
+
+ipa = IPA2('ind')
+print(ipa.convert_sent(text))
 
 from khmerphonemizer import phonemize
 

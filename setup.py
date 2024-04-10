@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name='ipa2',
     version='0.9.2',
-    package_data={'ipa2': ['data/*', 'ipa-dict/*', 'resources/*', 'resources/*/*', 'dragonmapper/data/*']},
+    package_data={'ipa2': ['thaig2p.tar', 'data/*', 'ipa-dict/*', 'resources/*', 'resources/*/*', 'dragonmapper/data/*']},
     description='Tools for convert Text to IPA in python',
     long_description="Github : https://github.com/voidful/ipa2",
     url='https://github.com/voidful/ipa2',
@@ -39,7 +39,8 @@ setup(
         "pypinyin-dict",
         "persian_phonemizer",
         "pythainlp",
-        "khmerphonemizer"
+        "khmerphonemizer",
+        "g2p_id_py"
     ],
     packages=find_packages('.')
 )

@@ -18,6 +18,7 @@ from pypinyin_dict.phrase_pinyin_data import large_pinyin
 from .g2pT import g2p
 from pythainlp.tokenize import word_tokenize
 from khmerphonemizer import phonemize
+from g2p_id import G2p
 
 class IPA2:
     def __init__(self, lang='yue'):
@@ -28,6 +29,7 @@ class IPA2:
         self.lao_epi = None
         self.ur2sr = None
         self.phonemizer = None
+        self.id_ms_g2p = None
         if isinstance(lang, str):
             if lang.startswith('zho-'):
                 large_pinyin.load()
@@ -49,6 +51,8 @@ class IPA2:
                     source_lang='ur',
                     target_lang='sr'
                 )
+            elif lang in ('ind', 'msa'):
+                self.id_ms_g2p = G2p()
             elif lang == 'kan':
                 pass
             else:
@@ -133,6 +137,8 @@ class IPA2:
                         source_lang='ur',
                         target_lang='sr'
                     )
+                elif i in ('ind', 'msa'):
+                    self.id_ms_g2p = G2p()
                 elif i == 'kan':
                     pass
                 else:
@@ -332,6 +338,10 @@ class IPA2:
             result = phonemize(_input)
             if result is not None and len(result) > 1:
                 return [' '.join([''.join(i) for i in result[1]])]
+        if (isinstance(self.lang, str) and self.lang in ('ind', 'msa')) or (isinstance(self.lang, list) and True in [s in ('ind', 'msa') for s in self.lang]):
+            result = self.id_ms_g2p(_input)
+            if result is not None and len(result) > 1:
+                return [' '.join([''.join(i) for i in result])]
 
         _input = nlp2.split_sentence_to_array(_input.lower(), False)
         result = []

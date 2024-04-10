@@ -3,7 +3,6 @@ import re
 import itertools
 
 import nlp2
-import eng_to_ipa as ipa
 from pathlib import Path
 #from .tamil2ipa import txt2ipa
 from .kannada2ipa import kannada2ipa
@@ -15,10 +14,12 @@ import pykakasi
 from pypinyin import pinyin, Style
 from pinyin_to_ipa import pinyin_to_ipa
 from pypinyin_dict.phrase_pinyin_data import large_pinyin
-from .g2pT import g2p
+from .g2pT import g2p as tha_g2p
 from pythainlp.tokenize import word_tokenize
-from khmerphonemizer import phonemize
-from g2p_id import G2p
+from khmerphonemizer import phonemize as khm_phonemizer
+from g2p_id import G2p as IDG2p
+from g2p_en import G2p as ENG2p
+from arpa2ipa import arpa_to_ipa, arpa_to_ipa_lookup
 
 class IPA2:
     def __init__(self, lang='yue'):
@@ -28,14 +29,14 @@ class IPA2:
         self.epi = None
         self.lao_epi = None
         self.ur2sr = None
-        self.phonemizer = None
+        self.fas_phonemizer = None
         self.id_ms_g2p = None
         if isinstance(lang, str):
             if lang.startswith('zho-'):
                 large_pinyin.load()
             elif lang == 'fas':
-                from persian_phonemizer import Phonemizer
-                self.phonemizer = Phonemizer()
+                from persian_phonemizer import Phonemizer as FasPhonemizer
+                self.fas_phonemizer = FasPhonemizer()
             elif lang == 'kor':
                 os.environ["TF_ENABLE_ONEDNN_OPTS"] = '0'
                 from fairseq.models.transformer import TransformerModel
@@ -52,7 +53,7 @@ class IPA2:
                     target_lang='sr'
                 )
             elif lang in ('ind', 'msa'):
-                self.id_ms_g2p = G2p()
+                self.id_ms_g2p = IDG2p()
             elif lang == 'kan':
                 pass
             else:
@@ -120,8 +121,8 @@ class IPA2:
                 if i.startswith('zho-'):
                     large_pinyin.load()
                 elif i == 'fas':
-                    from persian_phonemizer import Phonemizer
-                    self.phonemizer = Phonemizer()
+                    from persian_phonemizer import Phonemizer as FasPhonemizer
+                    self.fas_phonemizer = FasPhonemizer()
                 elif i == 'kor':
                     os.environ["TF_ENABLE_ONEDNN_OPTS"] = '0'
                     from fairseq.models.transformer import TransformerModel
@@ -138,7 +139,7 @@ class IPA2:
                         target_lang='sr'
                     )
                 elif i in ('ind', 'msa'):
-                    self.id_ms_g2p = G2p()
+                    self.id_ms_g2p = IDG2p()
                 elif i == 'kan':
                     pass
                 else:
@@ -294,9 +295,7 @@ class IPA2:
         return spell
 
     def retrieve_not_converted_char(self, not_converted_char, retrieve_all=False):
-        if (isinstance(self.lang, str) and self.lang.startswith('eng-')) or (isinstance(self.lang, list) and True in [s.startswith('eng-') for s in self.lang]):
-            return [ipa.convert(not_converted_char)]
-        elif (isinstance(self.lang, str) and self.lang == 'jpn') or (isinstance(self.lang, list) and True in [s == 'jpn' for s in self.lang]):
+        if (isinstance(self.lang, str) and self.lang == 'jpn') or (isinstance(self.lang, list) and True in [s == 'jpn' for s in self.lang]):
             return [self.hanzi_to_kana(not_converted_char)]
         elif self.epi is not None:
             return [self.epi.transliterate(not_converted_char)]
@@ -316,16 +315,24 @@ class IPA2:
             return [self.ur2sr.translate(jamo)]
         elif self.lao_epi is not None:
             return [self.lao_epi.transliterate(_input)]
-        elif self.phonemizer is not None:
-            return [self.phonemizer.phonemize(_input)]
+        elif self.fas_phonemizer is not None:
+            return [self.fas_phonemizer.phonemize(_input)]
         if (isinstance(self.lang, str) and self.lang == 'kan') or (isinstance(self.lang, list) and True in [s == 'kan' for s in self.lang]):
             return [kannada2ipa(_input)]
         if (isinstance(self.lang, str) and self.lang.startswith('zho-')) or (isinstance(self.lang, list) and True in [s.startswith('zho-') for s in self.lang]):
             result = pinyin(_input, style=Style.TONE3, heteronym=retrieve_all)
             if result is not None and len(result) > 0:
                 return [' '.join([self.pinyin2ipa(y) for y in x]) for x in itertools.product(*result)]
-        if (isinstance(self.lang, str) and self.lang.startswith('eng-')) or (isinstance(self.lang, list) and True in [s.startswith('eng-') for s in self.lang]):
-            return [ipa.convert(_input)]
+        if (isinstance(self.lang, str) and self.lang == 'eng-us') or (isinstance(self.lang, list) and True in [s == 'eng-us' for s in self.lang]):
+            en_g2p = ENG2p()
+            out = en_g2p(_input)
+            ret = ''
+            for s in out:
+                if s in arpa_to_ipa_lookup:
+                    ret += arpa_to_ipa(s)
+                else:
+                    ret += s
+            return [ret]
         if (isinstance(self.lang, str) and self.lang == 'vie-n') or (isinstance(self.lang, list) and True in [s == 'vie-n' for s in self.lang]):
             return [vPhon.main(['--text', _input,'--dialect', 'n'])]
         if (isinstance(self.lang, str) and self.lang == 'vie-c') or (isinstance(self.lang, list) and True in [s == 'vie-c' for s in self.lang]):
@@ -333,9 +340,9 @@ class IPA2:
         if (isinstance(self.lang, str) and self.lang == 'vie-s') or (isinstance(self.lang, list) and True in [s == 'vie-s' for s in self.lang]):
             return [vPhon.main(['--text', _input,'--dialect', 's'])]
         if (isinstance(self.lang, str) and self.lang == 'tha') or (isinstance(self.lang, list) and True in [s == 'tha' for s in self.lang]):
-            return [' '.join([g2p(i).replace(' ', '').replace('.', ' ') for i in word_tokenize(_input)])]
+            return [' '.join([tha_g2p(i).replace(' ', '').replace('.', ' ') for i in word_tokenize(_input)])]
         if (isinstance(self.lang, str) and self.lang == 'khm') or (isinstance(self.lang, list) and True in [s == 'khm' for s in self.lang]):
-            result = phonemize(_input)
+            result = khm_phonemizer(_input)
             if result is not None and len(result) > 1:
                 return [' '.join([''.join(i) for i in result[1]])]
         if (isinstance(self.lang, str) and self.lang in ('ind', 'msa')) or (isinstance(self.lang, list) and True in [s in ('ind', 'msa') for s in self.lang]):

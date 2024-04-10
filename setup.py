@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='ipa2',
-    version='0.9.2',
+    version='0.9.3',
     package_data={'ipa2': ['thaig2p.tar', 'data/*', 'ipa-dict/*', 'resources/*', 'resources/*/*', 'dragonmapper/data/*']},
     description='Tools for convert Text to IPA in python',
     long_description="Github : https://github.com/voidful/ipa2",
@@ -29,6 +29,8 @@ setup(
         "zhon",
         "hanzidentifier",
         "eng-to-ipa",
+        "g2p_en",
+        "brave@git+https://github.com/chorusai/arpa2ipa.git",
         "epitran",
         "jamo",
         "g2pk",

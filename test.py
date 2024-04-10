@@ -6,10 +6,30 @@ from ipa2.kana2ipa import kana2ipa
 import epitran
 import pykakasi
 from ipa2.vphon import vPhon
-from g2p_id import G2p
+from g2p_id import G2p as IDG2p
+
+from g2p_en import G2p as ENG2p
+from arpa2ipa import arpa_to_ipa, arpa_to_ipa_lookup
+
+text='phonemizing an english text is imposimpable!'
+#text='Big bodies deliver big sound with big bass response.'
+g2p = ENG2p()
+out = g2p(text)
+print(out)
+ret = ''
+for s in out:
+    if s in arpa_to_ipa_lookup:
+        ret += arpa_to_ipa(s)
+    else:
+        ret += s
+
+print(ret)
+ipa = IPA2('eng-us')
+print(ipa.convert_sent(text))
+
 
 text = 'Mereka sedang bermain bola di lapangan.'
-g2p = G2p()
+g2p = IDG2p()
 result = g2p(text)
 print(result)
 print(' '.join([''.join(i) for i in result]))

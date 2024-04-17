@@ -7,10 +7,10 @@ from pathlib import Path
 #from .tamil2ipa import txt2ipa
 from .kannada2ipa import kannada2ipa
 from .worker import to_jamo
-from .kana2ipa import kana2ipa
 from .vphon import vPhon
 import epitran
 import pykakasi
+import jamorasep
 from pypinyin import pinyin, Style
 from pinyin_to_ipa import pinyin_to_ipa
 from pypinyin_dict.phrase_pinyin_data import large_pinyin
@@ -281,13 +281,13 @@ class IPA2:
                 t[i[0]] = re.sub(',\s*', ',', i[1].replace('/', ''))
         return t
 
-    def hanzi_to_kana(self, text):
+    def jpn_to_kana(self, text):
         result = self.kks.convert(text)
         if result is not None and len(result) >0:
             spell = ''
             sep = ''
             for item in result:
-                hira = kana2ipa(item['hira'])
+                hira = ''.join(jamorasep.parse(item['hira'], output_format="simple-ipa"))
                 spell += sep + hira
                 sep  = ' '
         else:
@@ -295,9 +295,7 @@ class IPA2:
         return spell
 
     def retrieve_not_converted_char(self, not_converted_char, retrieve_all=False):
-        if (isinstance(self.lang, str) and self.lang == 'jpn') or (isinstance(self.lang, list) and True in [s == 'jpn' for s in self.lang]):
-            return [self.hanzi_to_kana(not_converted_char)]
-        elif self.epi is not None:
+        if self.epi is not None:
             return [self.epi.transliterate(not_converted_char)]
         else:
             return [not_converted_char]
@@ -317,6 +315,8 @@ class IPA2:
             return [self.lao_epi.transliterate(_input)]
         elif self.fas_phonemizer is not None:
             return [self.fas_phonemizer.phonemize(_input)]
+        if (isinstance(self.lang, str) and self.lang == 'jpn') or (isinstance(self.lang, list) and True in [s == 'jpn' for s in self.lang]):
+            return [self.jpn_to_kana(_input)]
         if (isinstance(self.lang, str) and self.lang == 'kan') or (isinstance(self.lang, list) and True in [s == 'kan' for s in self.lang]):
             return [kannada2ipa(_input)]
         if (isinstance(self.lang, str) and self.lang.startswith('zho-')) or (isinstance(self.lang, list) and True in [s.startswith('zho-') for s in self.lang]):

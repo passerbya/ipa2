@@ -2,7 +2,7 @@ import re
 from ipa2 import IPA2
 from ipa2.tamil2ipa import txt2ipa
 from ipa2.kannada2ipa import kannada2ipa
-from ipa2.kana2ipa import kana2ipa
+import jamorasep
 import epitran
 import pykakasi
 from ipa2.vphon import vPhon
@@ -116,10 +116,10 @@ if result is not None and len(result) >0:
     spell = ''
     sep = ''
     for item in result:
-        spell += sep + kana2ipa(item['hepburn'])
+        spell += sep + ''.join(jamorasep.parse(item['hira'], output_format="simple-ipa"))
         sep  = ' '
     print(spell)
-print(kana2ipa(text))
+print(jamorasep.parse(text, output_format="simple-ipa"))
 
 
 text='좋거든요'

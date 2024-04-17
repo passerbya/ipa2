@@ -12,7 +12,7 @@ import torch.nn.functional as F
 #from pythainlp.corpus import download, get_corpus_path
 from pathlib import Path
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HERE = Path(__file__).parent
 
 class ThaiG2P:

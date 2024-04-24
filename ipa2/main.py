@@ -19,7 +19,7 @@ from pythainlp.tokenize import word_tokenize
 from khmerphonemizer import phonemize as khm_phonemizer
 from g2p_id import G2p as IDG2p
 from g2p_en import G2p as ENG2p
-from arpa2ipa import arpa_to_ipa, arpa_to_ipa_lookup
+from arpa2ipa import arpa_to_ipa_lookup, monopthongs, dipthongs, r_colored_vowels
 
 class IPA2:
     def __init__(self, lang='yue'):
@@ -294,6 +294,36 @@ class IPA2:
             spell = text
         return spell
 
+    def arpa_to_ipa(self, arpa_list):
+        vowels = set(' ')
+        vowels.update(monopthongs)
+        vowels.update(dipthongs)
+        vowels.update(r_colored_vowels)
+        ipa = []
+        stress_markers = []  # List to hold indices where stress marks need to be inserted
+        # First, convert phonemes to IPA
+        for phoneme in arpa_list:
+            ipa.append(arpa_to_ipa_lookup.get(phoneme, phoneme))
+
+        # Second, identify positions for stress marks
+        for i, phoneme in enumerate(arpa_list):
+            if phoneme[-1].isdigit():
+                stress = phoneme[-1]
+                if stress == '0':
+                    continue
+                stress_symbol = 'ˈ' if stress == '1' else 'ˌ'
+                # Look for the start of the syllable
+                syllable_start = i
+                while syllable_start > 0 and arpa_list[syllable_start-1] not in vowels:
+                    syllable_start -= 1
+                stress_markers.append((syllable_start, stress_symbol))
+
+        # Insert stress markers in the reversed order to not mess up the indices
+        for index, symbol in reversed(stress_markers):
+            ipa.insert(index, symbol)
+
+        return ''.join(ipa)
+
     def retrieve_not_converted_char(self, not_converted_char, retrieve_all=False):
         if self.epi is not None:
             return [self.epi.transliterate(not_converted_char)]
@@ -325,14 +355,8 @@ class IPA2:
                 return [' '.join([self.pinyin2ipa(y) for y in x]) for x in itertools.product(*result)]
         if (isinstance(self.lang, str) and self.lang == 'eng-us') or (isinstance(self.lang, list) and True in [s == 'eng-us' for s in self.lang]):
             en_g2p = ENG2p()
-            out = en_g2p(_input)
-            ret = ''
-            for s in out:
-                if s in arpa_to_ipa_lookup:
-                    ret += arpa_to_ipa(s)
-                else:
-                    ret += s
-            return [ret]
+            out = self.arpa_to_ipa(en_g2p(_input))
+            return [out]
         if (isinstance(self.lang, str) and self.lang == 'vie-n') or (isinstance(self.lang, list) and True in [s == 'vie-n' for s in self.lang]):
             return [vPhon.main(['--text', _input,'--dialect', 'n'])]
         if (isinstance(self.lang, str) and self.lang == 'vie-c') or (isinstance(self.lang, list) and True in [s == 'vie-c' for s in self.lang]):

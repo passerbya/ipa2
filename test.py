@@ -14,17 +14,11 @@ from arpa2ipa import arpa_to_ipa, arpa_to_ipa_lookup
 text='phonemizing an english text is imposimpable!'
 #text='Big bodies deliver big sound with big bass response.'
 g2p = ENG2p()
-out = g2p(text)
-print(out)
-ret = ''
-for s in out:
-    if s in arpa_to_ipa_lookup:
-        ret += arpa_to_ipa(s)
-    else:
-        ret += s
-
-print(ret)
+print(g2p(text))
 ipa = IPA2('eng-us')
+print(ipa.convert_sent(text))
+text='immediately'
+print(g2p(text))
 print(ipa.convert_sent(text))
 
 
